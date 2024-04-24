@@ -5,7 +5,7 @@
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
         <q-toolbar-title>
-          rpgApp
+          Last Breath
         </q-toolbar-title>
         <q-btn dense flat round icon="home"
         @click="toggleRightDrawer"
