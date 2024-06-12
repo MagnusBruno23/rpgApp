@@ -1,17 +1,26 @@
 <template>
   <q-page padding>
     <div>
-    </div>
-    <div>
+      <div class="row justify-center">
+        <q-img
+          src="~assets/rosa_ventos.png"
+          width="220px"
+          height="220px"
+        />
+      </div>
+      <div><br></div>
+
       <q-btn
-      outline rounded color="primary"
-      class="full-width"
-      padding="15px"
-      icon="feed"
-      label="FICHAS"
-      to="listaFichas"/>
+        outline rounded color="primary"
+        class="full-width"
+        padding="15px"
+        icon="feed"
+        label="FICHAS"
+        to="ficha"
+      />
     </div>
     <div><br></div>
+
 
     <div>
       <q-btn outline rounded color="primary"
@@ -50,6 +59,8 @@
     label="DESVANTAGENS"
     to="listaDesvant"/>
   </q-page>
+
+
 </template>
 
 <script>
