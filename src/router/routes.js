@@ -16,7 +16,9 @@ const routes = [
       { path: 'listaRacas', component: () => import('pages/listaRacas.vue') },
       { path: 'listaVant', component: () => import('pages/listaVant.vue') },
       { path: 'listaDesvant', component: () => import('pages/listaDesvant.vue') },
-      { path: 'ficha', component: () => import('pages/fichaView.vue') }
+     /* { path: 'listaFichas', component: () => import('pages/fichaView.vue') },*/
+      { path: 'adicionar-ficha', component: () => import('pages/AdicionarFicha.vue') },
+      { path: '/editar-ficha/:id', component: () => import('pages/EditarFicha.vue') }
     ]
   },
 

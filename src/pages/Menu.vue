@@ -16,7 +16,7 @@
         padding="15px"
         icon="feed"
         label="FICHAS"
-        to="ficha"
+        to="listaFichas"
       />
     </div>
     <div><br></div>
