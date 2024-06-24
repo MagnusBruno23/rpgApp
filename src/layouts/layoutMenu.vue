@@ -1,9 +1,24 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <div class="fullscreen bg-image">
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
+    <q-layout view="hHh lpR fFf">
+      <q-page-container>
+        <q-scroll-area class="fullscreen">
+        <router-view />
+        </q-scroll-area>
+      </q-page-container>
 
-  </q-layout>
+    </q-layout>
+  </div>
 </template>
+<style>
+
+  .bg-image {
+    background-image: url(~assets/background.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center
+  }
+
+
+</style>

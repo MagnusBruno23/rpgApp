@@ -13,14 +13,15 @@ export const classes = [
 export const racas = [
   'Humano',
   'Elfo',
+  'Orc',
   'Anão',
-  'Halfling',
-  'Meio-Elfo',
-  'Meio-Orc',
-  'Gnomo',
-  'Meio-Gigante',
+  'Minotauro',
+  'Fada',
   'Tiefling',
-  'Dragonborn'
+  'Aasimar',
+  'Meio-Animal',
+  'Dracônico',
+  'Super Humano'
 ];
 export const vantagens = [
   { nome: 'Adaptabilidade', custo: 2 },

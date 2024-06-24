@@ -1,14 +1,14 @@
 <template>
   <q-page padding>
     <div>
-      <div class="row justify-center">
+      <div class="row justify-center items-center">
         <q-img
           src="~assets/rosa_ventos.png"
           width="220px"
           height="220px"
-        />
+        /><br/>
+        <h1>Last Breath</h1>
       </div>
-      <div><br></div>
 
       <q-btn
         outline rounded color="primary"

@@ -24,15 +24,21 @@
             <q-btn label="Distribuir Pontos" @click="showDistribuirPontosModal = true" />
             <q-btn label="Vantagens" @click="showVantagensModal = true" />
             <q-btn label="Desvantagens" @click="showDesvantagensModal = true" />
+            <q-btn label="Habilidades" @click="navegarParaHabilidades" />
+            <q-btn label="Magias" @click="navegarParaMagias" />
+            <q-btn label="Itens" @click="navegarParaItens" />
+            <q-btn label="Armaduras" @click="navegarParaArmaduras" />
           </div>
 
           <div class="q-mt-md">
             <div>Level: {{ ficha.level }}</div>
+            <div>Experiência: {{ ficha.experiencia }} / {{ proximoNivelXP }}</div>
+            <q-linear-progress :value="ficha.experiencia / proximoNivelXP" color="green" size="xs" style="width: 50%;" />
             <q-btn label="Adicionar Experiência" @click="showExperienciaModal = true" />
             <div>Pontos de Vida: {{ pontosDeVida }}</div>
-            <q-linear-progress :value="pontosDeVida / vidaMaxima" color="red" size="xs" style="width: 50%;" />
+            <q-linear-progress :value="pontosDeVida / vidaMaxima" color="red" size="xs" style="width: 25%;" />
             <div>Pontos de Mana: {{ pontosDeMana }}</div>
-            <q-linear-progress :value="pontosDeMana / manaMaxima" color="blue" size="xs" style="width: 50%;" />
+            <q-linear-progress :value="pontosDeMana / manaMaxima" color="blue" size="xs" style="width: 25%;" />
             <div>Vigor: {{ ficha.vigor }}</div>
             <div>Ataque Base: {{ ataqueBase }}</div>
             <div>Ataque Base Mágico: {{ ataqueBaseMagico }}</div>
@@ -50,7 +56,7 @@
       </q-card-section>
     </q-card>
 
-    <!-- Modais de Distribuição de Pontos, Vantagens e Desvantagens -->
+    <!-- Modal para Distribuição de Pontos -->
     <q-dialog v-model="showDistribuirPontosModal">
       <q-card>
         <q-card-section class="text-h6">Distribuir Pontos</q-card-section>
@@ -100,15 +106,13 @@
         <q-card-section class="text-h6">Pontos disponíveis: {{ pontosVantagensDisponiveis }}</q-card-section>
 
         <q-card-section v-for="vantagem in vantagens" :key="vantagem.nome" class="row items-center q-mb-sm">
-          <div class="col">{{ vantagem.nome }}</div>
-          <div class="col q-mx-sm">Requer: {{ vantagem.custo }} Pontos</div>
-          <div class="col q-mx-sm">
-            <q-btn icon="remove" @click="removerVantagem(vantagem)" :disable="!vantagemSelecionada(vantagem)" />
+          <div class="col">
+            <div>{{ vantagem.nome }}</div>
+            <div>Requer: {{ vantagem.custo }} Pontos</div>
           </div>
-          <div class="col q-mx-sm">{{ contarVantagem(vantagem) }}</div>
-          <div class="col q-mx-sm">
-            <q-btn icon="add" @click="adicionarVantagem(vantagem)" :disable="pontosVantagensDisponiveis < vantagem.custo || vantagemSelecionada(vantagem)" />
-          </div>
+          <q-btn icon="remove" @click="removerVantagem(vantagem)" :disable="!vantagemSelecionada(vantagem)" />
+          <div class="q-ml-sm q-mr-sm">{{ contarVantagem(vantagem) }}</div>
+          <q-btn icon="add" @click="adicionarVantagem(vantagem)" :disable="pontosVantagensDisponiveis < vantagem.custo || vantagemSelecionada(vantagem)" />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -118,12 +122,35 @@
       </q-card>
     </q-dialog>
 
+    <!-- Modal para Desvantagens -->
+    <q-dialog v-model="showDesvantagensModal">
+      <q-card>
+        <q-card-section class="text-h6">Selecionar Desvantagens</q-card-section>
+        <q-card-section class="text-h6">Pontos disponíveis: {{ pontosDesvantagensDisponiveis }}</q-card-section>
+        <q-card-section>
+          <q-card-section v-for="desvantagem in desvantagens" :key="desvantagem.nome" class="row items-center q-mb-sm">
+            <div class="col">
+              <div>{{ desvantagem.nome }}</div>
+              <div>Custo: {{ desvantagem.custo }} Pontos</div>
+            </div>
+            <q-btn icon="remove" @click="removerDesvantagem(desvantagem)" :disable="!desvantagemSelecionada(desvantagem)" />
+            <div class="q-ml-sm q-mr-sm">{{ contarDesvantagem(desvantagem) }}</div>
+            <q-btn icon="add" @click="adicionarDesvantagem(desvantagem)" :disable="pontosDesvantagensDisponiveis < desvantagem.custo || desvantagemSelecionada(desvantagem)" />
+          </q-card-section>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" @click="showDesvantagensModal = false" />
+          <q-btn flat label="Ok" @click="confirmarDesvantagens" color="primary" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- Modal para Adicionar Experiência -->
     <q-dialog v-model="showExperienciaModal">
       <q-card>
         <q-card-section class="text-h6">Adicionar Experiência</q-card-section>
         <q-card-section>
-          <q-input filled v-model="experienciaParaAdicionar" label="Experiência" type="number" />
+          <q-input filled v-model.number="experienciaParaAdicionar" label="Experiência" type="number" :min="0" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" @click="showExperienciaModal = false" />
@@ -140,7 +167,88 @@ import { classes, racas, vantagens, desvantagens } from '../assets/rpgData';
 export default {
   data() {
     return {
-      ficha: {
+      ficha: this.inicializarFicha(),
+      classes: classes.map(c => ({ label: c, value: c })),
+      racas: racas.map(r => ({ label: r, value: r })),
+      vantagens: vantagens,
+      desvantagens: desvantagens,
+      fotoUrl: null,
+      showDistribuirPontosModal: false,
+      showVantagensModal: false,
+      showDesvantagensModal: false,
+      showExperienciaModal: false,
+      experienciaParaAdicionar: 0,
+      fichas: []
+    };
+  },
+  computed: {
+    pontosDisponiveis() {
+      const totalAtributos = Object.values(this.ficha.atributos).reduce((acc, cur) => acc + cur, 0);
+      const pontosIniciais = 25 + (this.ficha.level * 5);
+      return pontosIniciais - totalAtributos;
+    },
+    pontosVantagensDisponiveis() {
+      const totalPontosVantagens = this.ficha.vantagens.reduce((acc, cur) => acc + cur.custo, 0);
+      return 5 - totalPontosVantagens;
+    },
+    pontosDesvantagensDisponiveis() {
+      const totalPontosDesvantagens = this.ficha.desvantagens.reduce((acc, cur) => acc + cur.custo, 0);
+      return 5 - totalPontosDesvantagens;
+    },
+    pontosDeVida() {
+      return 50 + this.ficha.atributos.constituicao * 3;
+    },
+    pontosDeMana() {
+      return 20 + this.ficha.atributos.inteligencia * 3;
+    },
+    vidaMaxima() {
+      return 50 + this.ficha.atributos.constituicao * 3;
+    },
+    manaMaxima() {
+      return 20 + this.ficha.atributos.inteligencia * 3;
+    },
+    ataqueBase() {
+      return this.ficha.atributos.forca * 2 + this.bonusAtk;
+    },
+    ataqueBaseMagico() {
+      return this.ficha.atributos.inteligencia * 2 + this.bonusAtkM;
+    },
+    acerto() {
+      return this.ficha.atributos.destreza * 2;
+    },
+    esquiva() {
+      return this.ficha.atributos.agilidade * 2;
+    },
+    rdf() {
+      return this.ficha.atributos.constituicao * 2 + this.bonusRdf;
+    },
+    rdm() {
+      return this.ficha.atributos.inteligencia * 2 + this.bonusRdm;
+    },
+    proximoNivelXP() {
+      const xpLevels = [
+        10, 30, 60, 100, 150, 210, 280, 360, 450, 550,
+        670, 810, 970, 1150, 1350, 1570, 1810, 2070, 2350, 2650
+      ];
+      let nextLevelXP = xpLevels.find(xp => xp > this.ficha.experiencia);
+      return nextLevelXP ? nextLevelXP : "Max Level";
+    },
+    bonusAtk() {
+      return this.ficha.armaduras.reduce((acc, armadura) => acc + (armadura.atk || 0), 0);
+    },
+    bonusAtkM() {
+      return this.ficha.armaduras.reduce((acc, armadura) => acc + (armadura.atkM || 0), 0);
+    },
+    bonusRdf() {
+      return this.ficha.armaduras.reduce((acc, armadura) => acc + (armadura.rdf || 0), 0);
+    },
+    bonusRdm() {
+      return this.ficha.armaduras.reduce((acc, armadura) => acc + (armadura.rdm || 0), 0);
+    }
+  },
+  methods: {
+    inicializarFicha() {
+      return {
         id: null,
         nome: '',
         idade: null,
@@ -158,66 +266,20 @@ export default {
         foto: null,
         vantagens: [],
         desvantagens: [],
-        vigor: 0
-      },
-      classes: classes.map(c => ({ label: c, value: c })),
-      racas: racas.map(r => ({ label: r, value: r })),
-      fotoUrl: null,
-      showDistribuirPontosModal: false,
-      showVantagensModal: false,
-      showDesvantagensModal: false,
-      showExperienciaModal: false,
-      vantagens: vantagens,
-      experienciaParaAdicionar: 0
-    };
-  },
-  computed: {
-    pontosDisponiveis() {
-      const totalPontosAtributos = Object.values(this.ficha.atributos).reduce((acc, cur) => acc + cur, 0);
-      return 25 - totalPontosAtributos;
+        vigor: 0,
+        habilidades: [],
+        itens: [],
+        armaduras: [],
+        pontosDistribuicao: 25
+      };
     },
-    pontosVantagensDisponiveis() {
-      const totalPontosVantagens = this.ficha.vantagens.reduce((acc, cur) => acc + cur.custo, 0);
-      return 5 - totalPontosVantagens;
-    },
-    pontosDeVida() {
-      return 50 + this.ficha.atributos.constituicao * 3;
-    },
-    pontosDeMana() {
-      return 20 + this.ficha.atributos.constituicao * 3;
-    },
-    vidaMaxima() {
-      return 50 + this.ficha.atributos.constituicao * 3;
-    },
-    manaMaxima() {
-      return 20 + this.ficha.atributos.constituicao * 3;
-    },
-    ataqueBase() {
-      return this.ficha.atributos.forca * 2;
-    },
-    ataqueBaseMagico() {
-      return this.ficha.atributos.inteligencia * 2;
-    },
-    acerto() {
-      return this.ficha.atributos.destreza * 2;
-    },
-    esquiva() {
-      return this.ficha.atributos.agilidade * 2;
-    },
-    rdf() {
-      return this.ficha.atributos.constituicao * 2;
-    },
-    rdm() {
-      return this.ficha.atributos.inteligencia * 2;
-    }
-  },
-  methods: {
     salvarFicha() {
       this.carregarFichas();
       const fichaIndex = this.fichas.findIndex(f => f.id === this.ficha.id);
       if (fichaIndex !== -1) {
         this.fichas[fichaIndex] = { ...this.ficha, foto: this.fotoUrl };
       } else {
+        this.ficha.id = this.gerarIdUnico();
         this.fichas.push({ ...this.ficha, foto: this.fotoUrl });
       }
       this.salvarFichas();
@@ -227,29 +289,32 @@ export default {
       this.$router.push('/listaFichas');
     },
     ajustarAtributo(atributo, valor) {
-      if (this.pontosDisponiveis >= valor) {
+      if (valor > 0 && this.pontosDisponiveis >= valor) {
         this.ficha.atributos[atributo] += valor;
+        this.ficha.pontosDistribuicao -= valor;
+      } else if (valor < 0 && this.ficha.atributos[atributo] > 1) {
+        this.ficha.atributos[atributo] += valor;
+        this.ficha.pontosDistribuicao += Math.abs(valor);
       }
     },
     adicionarVantagem(vantagem) {
-      if (this.pontosVantagensDisponiveis >= vantagem.custo) {
+      if (this.pontosVantagensDisponiveis >= vantagem.custo && !this.vantagemSelecionada(vantagem)) {
         this.ficha.vantagens.push(vantagem);
       }
     },
     removerVantagem(vantagem) {
-      this.ficha.vantagens = this.ficha.vantagens.filter(v => v !== vantagem);
-    },
-    vantagemSelecionada(vantagem) {
-      return this.ficha.vantagens.includes(vantagem);
-    },
-    contarVantagem(vantagem) {
-      return this.ficha.vantagens.filter(v => v === vantagem).length;
+      if (this.vantagemSelecionada(vantagem)) {
+        this.ficha.vantagens = this.ficha.vantagens.filter(v => v !== vantagem);
+      }
     },
     confirmarDistribuicaoPontos() {
       this.showDistribuirPontosModal = false;
     },
     confirmarVantagens() {
       this.showVantagensModal = false;
+    },
+    confirmarDesvantagens() {
+      this.showDesvantagensModal = false;
     },
     onFileChange(event) {
       const file = event.target.files[0];
@@ -263,49 +328,84 @@ export default {
       }
     },
     adicionarExperiencia() {
-      this.ficha.experiencia += this.experienciaParaAdicionar;
-      this.calcularLevel();
+      let adicionado = parseInt(this.experienciaParaAdicionar, 10);
+      if (!isNaN(adicionado) && adicionado > 0) {
+        this.ficha.experiencia += adicionado;
+        this.experienciaParaAdicionar = 0; // Resetar o campo de input
+        this.calcularLevel();
+      }
       this.showExperienciaModal = false;
     },
     calcularLevel() {
-      const xp = this.ficha.experiencia;
-      if (xp >= 2650) this.ficha.level = 20;
-      else if (xp >= 2350) this.ficha.level = 19;
-      else if (xp >= 2070) this.ficha.level = 18;
-      else if (xp >= 1810) this.ficha.level = 17;
-      else if (xp >= 1570) this.ficha.level = 16;
-      else if (xp >= 1350) this.ficha.level = 15;
-      else if (xp >= 1150) this.ficha.level = 14;
-      else if (xp >= 970) this.ficha.level = 13;
-      else if (xp >= 810) this.ficha.level = 12;
-      else if (xp >= 670) this.ficha.level = 11;
-      else if (xp >= 550) this.ficha.level = 10;
-      else if (xp >= 450) this.ficha.level = 9;
-      else if (xp >= 360) this.ficha.level = 8;
-      else if (xp >= 280) this.ficha.level = 7;
-      else if (xp >= 210) this.ficha.level = 6;
-      else if (xp >= 150) this.ficha.level = 5;
-      else if (xp >= 100) this.ficha.level = 4;
-      else if (xp >= 60) this.ficha.level = 3;
-      else if (xp >= 30) this.ficha.level = 2;
-      else if (xp >= 10) this.ficha.level = 1;
-      else this.ficha.level = 0;
+      const levelTable = [
+        10, 30, 60, 100, 150, 210, 280, 360, 450, 550,
+        670, 810, 970, 1150, 1350, 1570, 1810, 2070, 2350, 2650
+      ];
+      const oldLevel = this.ficha.level;
+      this.ficha.level = levelTable.findIndex(level => this.ficha.experiencia < level);
+      const newLevel = this.ficha.level;
+      if (newLevel !== -1 && newLevel !== oldLevel) {
+        let levelDifference = newLevel - oldLevel;
+        this.ficha.pontosDistribuicao += 5 * levelDifference;
+      }
     },
     carregarFicha() {
       const id = parseInt(this.$route.params.id, 10);
       const fichas = JSON.parse(localStorage.getItem('fichas')) || [];
       const ficha = fichas.find(f => f.id === id);
       if (ficha) {
-        this.ficha = ficha;
-        this.fotoUrl = ficha.foto;
+        this.ficha = this.atualizarEstruturaFicha(ficha);
+        this.fotoUrl = ficha.foto || null;
       }
     },
     carregarFichas() {
       const fichas = JSON.parse(localStorage.getItem('fichas')) || [];
-      this.fichas = fichas;
+      this.fichas = fichas.map(f => this.atualizarEstruturaFicha(f));
     },
     salvarFichas() {
       localStorage.setItem('fichas', JSON.stringify(this.fichas));
+    },
+    atualizarEstruturaFicha(ficha) {
+      // Certifique-se de que a ficha tenha todos os campos necessários
+      const fichaModelo = this.inicializarFicha();
+      return { ...fichaModelo, ...ficha };
+    },
+    gerarIdUnico() {
+      return Date.now();
+    },
+    navegarParaHabilidades() {
+      this.$router.push(`/habilidades/${this.ficha.id}`);
+    },
+    navegarParaMagias(){
+      this.$router.push(`/magicas/${this.ficha.id}`);
+    },
+    navegarParaItens(){
+      this.$router.push(`/itens/${this.ficha.id}`);
+    },
+    navegarParaArmaduras(){
+      this.$router.push({ path: `/armaduras/${this.ficha.id}` });
+    },
+    vantagemSelecionada(vantagem) {
+      return this.ficha.vantagens.includes(vantagem);
+    },
+    contarVantagem(vantagem) {
+      return this.ficha.vantagens.filter(v => v.nome === vantagem.nome).length;
+    },
+    desvantagemSelecionada(desvantagem) {
+      return this.ficha.desvantagens.includes(desvantagem);
+    },
+    contarDesvantagem(desvantagem) {
+      return this.ficha.desvantagens.filter(d => d.nome === desvantagem.nome).length;
+    },
+    adicionarDesvantagem(desvantagem) {
+      if (this.pontosDesvantagensDisponiveis >= desvantagem.custo && !this.desvantagemSelecionada(desvantagem)) {
+        this.ficha.desvantagens.push(desvantagem);
+      }
+    },
+    removerDesvantagem(desvantagem) {
+      if (this.desvantagemSelecionada(desvantagem)) {
+        this.ficha.desvantagens = this.ficha.desvantagens.filter(d => d !== desvantagem);
+      }
     }
   },
   created() {
@@ -315,5 +415,7 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos opcionais */
+.q-pa-md {
+  background-color: #e1c596;
+}
 </style>

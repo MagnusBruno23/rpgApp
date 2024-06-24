@@ -12,7 +12,7 @@
         class="full-width q-mb-sm"
         padding="15px"
         :label="classe.nome"
-        @click="selecionarClasse(classe)"
+        @click="selecionarClasse(classe.path)"
       />
     </div>
   </q-page>
@@ -23,28 +23,30 @@ export default {
   data() {
     return {
       classes: [
-        { id: 1, nome: 'Classe 1' },
-        { id: 2, nome: 'Classe 2' },
-        { id: 3, nome: 'Classe 3' },
-        { id: 4, nome: 'Classe 4' },
-        { id: 5, nome: 'Classe 5' },
-        { id: 6, nome: 'Classe 6' },
-        { id: 7, nome: 'Classe 7' },
-        { id: 8, nome: 'Classe 8' },
-        { id: 9, nome: 'Classe 9' },
-        { id: 10, nome: 'Classe 10' }
+        { id: 1, nome: 'Paladino', path: 'paladino' },
+        { id: 2, nome: 'Guerreiro', path: 'guerreiro' },
+        { id: 3, nome: 'Mago', path: 'mago' },
+        { id: 4, nome: 'Ladino', path: 'ladino' },
+        { id: 5, nome: 'Samurai', path: 'samurai' },
+        { id: 6, nome: 'Clérigo', path: 'clerigo' },
+        { id: 7, nome: 'Vampiro', path: 'vampiro' },
+        { id: 8, nome: 'Cavaleiro das Trevas', path: 'cavaleiro-das-trevas' },
+        { id: 9, nome: 'Necromante', path: 'necromante' },
+        { id: 10, nome: 'Mago do Caos', path: 'mago-do-caos' },
+        { id: 11, nome: 'Bardo', path: 'bardo' }
       ]
     };
   },
   methods: {
-    selecionarClasse(classe) {
-      // Implemente a lógica para lidar com a seleção da classe, se necessário
-      console.log(`Classe selecionada: ${classe.nome}`);
+    selecionarClasse(classePath) {
+      this.$router.push(`/classe/${classePath}`);
     }
   }
 };
 </script>
 
 <style scoped>
-/* Estilos específicos para o componente listaClasses.vue */
+.q-btn {
+  color: #000000 !important; /* Cor do texto dos botões em branco */
+}
 </style>

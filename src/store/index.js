@@ -1,3 +1,5 @@
+
+/* NÃO FUNCIONA, NÃO SEI PQ FIZ ISSO KKK */
 import { createStore } from 'vuex';
 
 const store = createStore({
@@ -28,3 +30,4 @@ const store = createStore({
 });
 
 export default store;
+/* NÃO FUNCIONA */
